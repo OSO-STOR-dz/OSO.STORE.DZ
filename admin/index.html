@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSO STORE - Administration</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Verdana,sans-serif}
+body{background:#f1f3f6;color:#1e293b;min-height:100vh}
+
+/* LOGIN */
+.login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#1e3c72 0%,#2a5298 100%);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px}
+.login-box{background:#fff;border-radius:20px;padding:40px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.3);text-align:center}
+.login-box .logo{width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;margin:0 auto 15px;box-shadow:0 0 0 5px #fff,0 0 0 7px #dbe7ff}
+.login-box h1{font-size:22px;color:#1e3c72;margin-bottom:6px}
+.login-box p{color:#64748b;font-size:13px;margin-bottom:20px}
+.login-box input{width:100%;padding:14px 16px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;margin-bottom:12px;background:#f8fafc}
+.login-box input:focus{outline:none;border-color:#2a5298;background:#fff}
+.btn-login{width:100%;padding:14px;background:linear-gradient(135deg,#1e3c72,#2a5298);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:15px}
+.btn-login:hover{opacity:0.95}
+.login-error{color:#e74c3c;font-size:13px;margin-top:10px;display:none}
+.login-hint{font-size:11px;color:#94a3b8;margin-top:10px}
+
+/* HEADER ADMIN */
+.admin-header{height:64px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100}
+.admin-header-left{display:flex;align-items:center;gap:12px}
+.admin-logo{width:42px;height:42px;border-radius:50%;border:2px solid #FF9900;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fff;flex-shrink:0}
+.admin-logo img{width:80%;height:auto}
+.admin-title{font-weight:800;letter-spacing:1px;color:#131921;font-size:18px}
+.admin-title span{color:#2a5298}
+.admin-header-right{display:flex;align-items:center;gap:10px}
+.btn{padding:9px 16px;border-radius:8px;border:none;cursor:pointer;font-weight:600;font-size:13px;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.btn-primary{background:#1e3c72;color:#fff}
+.btn-primary:hover{background:#162e59}
+.btn-orange{background:#FF9900;color:#fff}
+.btn-orange:hover{background:#e68a00}
+.btn-ghost{background:#f1f5f9;color:#334155;border:1px solid #e2e8f0}
+.btn-ghost:hover{background:#e2e8f0}
+.btn-danger{background:#fee2e2;color:#dc2626;border:1px solid #fecaca}
+.btn-danger:hover{background:#fecaca}
+.btn-sm{padding:6px 12px;font-size:12px}
+
+/* LAYOUT */
+.admin-layout{display:flex;min-height:calc(100vh - 64px)}
+.admin-sidebar{width:240px;background:#131921;color:#a0aec0;padding:20px 0;flex-shrink:0;position:sticky;top:64px;height:calc(100vh - 64px);overflow-y:auto}
+.sidebar-nav{display:flex;flex-direction:column;gap:4px;padding:0 12px}
+.sidebar-link{padding:12px 16px;border-radius:8px;display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:600;font-size:14px;color:#a0aec0;transition:all 0.2s;border:none;background:none;width:100%;text-align:left}
+.sidebar-link.active,.sidebar-link:hover{background:#1e293b;color:#fff}
+.sidebar-link .badge{background:#FF9900;color:#fff;font-size:11px;padding:2px 8px;border-radius:20px;margin-left:auto}
+.sidebar-footer{margin-top:20px;padding:16px;border-top:1px solid #2d3748;font-size:11px;line-height:1.5;color:#718096}
+
+/* MAIN */
+.admin-main{flex:1;padding:24px;max-width:1200px;width:100%;margin:0 auto}
+.page{display:none}
+.page.active{display:block}
+.page-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.page-head h2{font-size:22px;color:#0f172a}
+.page-head p{color:#64748b;font-size:13px;margin-top:4px}
+.stats{	display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,0.04);border:1px solid #f1f5f9}
+.stat-card .label{font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.stat-card .value{font-size:26px;font-weight:800;color:#0f172a;margin-top:6px}
+.stat-card .sub{font-size:12px;color:#94a3b8;margin-top:4px}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;background:#fff;padding:12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.03);border:1px solid #f1f5f9}
+.toolbar input,.toolbar select{padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px;background:#f8fafc;min-width:180px}
+.toolbar input:focus,.toolbar select:focus{outline:none;border-color:#2a5298;background:#fff}
+
+/* NICHES */
+.niches-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.niche-card{background:#fff;border-radius:12px;padding:16px;border:1.5px solid #f1f5f9;box-shadow:0 2px 6px rgba(0,0,0,0.03);display:flex;flex-direction:column;gap:10px;position:relative}
+.niche-card.all{border-color:#1e3c72;background:linear-gradient(135deg,#f8fafc,#eef2ff)}
+.niche-card .niche-top{display:flex;align-items:center;gap:10px}
+.niche-icon{width:38px;height:38px;border-radius:8px;background:#fff7e6;border:1px solid #FFD814;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.niche-card.all .niche-icon{background:#1e3c72;color:#fff;border-color:#1e3c72}
+.niche-name{font-weight:700;font-size:14px;color:#0f172a;flex:1}
+.niche-slug{font-size:11px;color:#94a3b8;background:#f1f5f9;padding:2px 6px;border-radius:4px}
+.niche-actions{display:flex;gap:6px;margin-top:4px}
+.niche-count{font-size:12px;color:#64748b}
+.add-niche-form{background:#fff;border-radius:12px;padding:16px;border:2px dashed #cbd5e1;display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:16px}
+.add-niche-form input{flex:1;min-width:200px;padding:11px 14px;border:1px solid #e2e8f0;border-radius:8px;font-size:14px}
+
+/* PRODUITS */
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.product-admin-card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.06);border:1px solid #f1f5f9;display:flex;flex-direction:column;transition:transform 0.2s}
+.product-admin-card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,0.08)}
+.prod-img{height:180px;background:#f8fafc;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.prod-img img{width:100%;height:100%;object-fit:cover}
+.prod-badge{position:absolute;top:10px;left:10px;background:#1e3c72;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px}
+.prod-badge.inactive{background:#94a3b8}
+.prod-price-badge{position:absolute;top:10px;right:10px;background:#B12704;color:#fff;font-size:13px;font-weight:800;padding:4px 10px;border-radius:20px}
+.prod-body{padding:14px;display:flex;flex-direction:column;gap:8px;flex:1}
+.prod-title{font-weight:700;font-size:15px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prod-desc{font-size:12px;color:#64748b;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:36px}
+.prod-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.meta-tag{font-size:11px;padding:4px 8px;border-radius:20px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
+.prod-actions{display:flex;gap:8px;margin-top:10px}
+.prod-actions .btn{flex:1;justify-content:center}
+
+/* MODALE FORM PRODUIT */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.6);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{width:100%;max-width:720px;background:#fff;border-radius:16px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.modal-head{padding:18px 20px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-head h3{font-size:18px;color:#0f172a}
+.modal-close{width:36px;height:36px;border-radius:50%;border:none;background:#f1f5f9;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center}
+.modal-body{padding:20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.form-row{grid-template-columns:1fr}}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group label{font-size:13px;font-weight:600;color:#334155}
+.form-group label span{color:#dc2626}
+.form-group input,.form-group select,.form-group textarea{padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;background:#f8fafc;width:100%}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#2a5298;background:#fff}
+.form-group textarea{min-height:90px;resize:vertical}
+.image-uploader{border:2px dashed #cbd5e1;border-radius:12px;padding:16px;background:#f8fafc;text-align:center;cursor:pointer;transition:all 0.2s}
+.image-uploader:hover{border-color:#2a5298;background:#eef2ff}
+.image-uploader input{display:none}
+.image-preview{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:10px}
+.img-thumb{position:relative;border-radius:10px;overflow:hidden;height:110px;background:#fff;border:1px solid #e2e8f0;group}
+.img-thumb img{width:100%;height:100%;object-fit:cover}
+.img-thumb .remove{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(220,38,38,0.9);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px}
+.img-thumb .cover-badge{position:absolute;bottom:0;left:0;right:0;background:rgba(30,60,114,0.9);color:#fff;font-size:10px;font-weight:700;text-align:center;padding:3px}
+.img-thumb .set-cover{position:absolute;inset:0;background:rgba(0,0,0,0.4);color:#fff;border:none;opacity:0;cursor:pointer;font-size:11px;font-weight:700;transition:opacity 0.2s}
+.img-thumb:hover .set-cover{opacity:1}
+.modal-foot{padding:16px 20px;border-top:1px solid #f1f5f9;display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;background:#f8fafc}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:60px 20px;background:#fff;border-radius:14px;border:2px dashed #e2e8f0;color:#64748b}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+.empty-state h3{color:#0f172a;margin-bottom:6px}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:#0f172a;color:#fff;padding:14px 18px;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,0.2);font-size:14px;font-weight:600;display:none;z-index:2000;gap:10px;align-items:center;max-width:400px}
+.toast.show{display:flex}
+.toast.success{background:#065f46}
+.toast.error{background:#991b1b}
+
+/* Responsive sidebar */
+@media(max-width:860px){
+  .admin-sidebar{position:fixed;left:-240px;top:64px;z-index:99;transition:left 0.3s}
+  .admin-sidebar.open{left:0}
+  .admin-main{padding:16px}
+  .mobile-menu-btn{display:flex !important}
+}
+.mobile-menu-btn{display:none;background:none;border:none;font-size:24px;cursor:pointer;color:#0f172a}
+.overlay-sidebar{display:none;position:fixed;inset:0;top:64px;background:rgba(0,0,0,0.4);z-index:98}
+.overlay-sidebar.open{display:block}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="logo">OSO</div>
+    <h1>OSO STORE — Admin</h1>
+    <p>Accès réservé à l'administrateur</p>
+    <input type="password" id="loginPass" placeholder="Mot de passe" onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="btn-login" onclick="doLogin()">Se connecter →</button>
+    <div class="login-error" id="loginError">Mot de passe incorrect</div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="admin-header">
+  <div class="admin-header-left">
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+    <div class="admin-logo"><img src="osa.png" alt="logo" onerror="this.style.display='none';this.parentElement.textContent='OSO'"></div>
+    <div class="admin-title">OSO <span>STORE</span> <span style="font-size:11px;background:#FF9900;color:#fff;padding:2px 6px;border-radius:4px;vertical-align:middle">ADMIN</span></div>
+  </div>
+  <div class="admin-header-right">
+    <a href="../index.html" target="_blank" class="btn btn-ghost">👁 Voir boutique</a>
+    <button class="btn btn-danger btn-sm" onclick="logout()">Déconnexion</button>
+  </div> 
+</header>
+
+<div class="overlay-sidebar" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<div class="admin-layout">
+  <aside class="admin-sidebar" id="sidebar">
+    <nav class="sidebar-nav">
+      <button class="sidebar-link" data-page="niches" onclick="showPage('niches')">🏷️ Niches <span class="badge" id="badgeNiches">0</span></button>
+      <button class="sidebar-link active" data-page="produits" onclick="showPage('produits')">📦 Produits <span class="badge" id="badgeProducts">0</span></button>
+      <button class="sidebar-link" data-page="settings" onclick="showPage('settings')">⚙️ Paramètres</button>
+    </nav>
+    <div class="sidebar-footer">
+      <b>Comment ajouter une niche ?</b><br>
+      1. Allez dans Niches<br>
+      2. Ajoutez le nom<br>
+      3. Elle apparaît auto dans le menu boutique ET dans le formulaire produit.<br><br>
+      <b>Astuce photos :</b> Glissez-déposez ou cliquez dans le formulaire produit. La 1ère photo = couverture.
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <!-- PAGE PRODUITS -->
+    <div class="page active" id="page-produits">
+      <div class="page-head">
+        <div>
+          <h2>Gestion des produits</h2>
+          <p>Ajoutez, modifiez, photos, prix et niche en même temps</p>
+        </div>
+        <button class="btn btn-orange" onclick="openProductModal()">+ Nouveau produit</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card"><div class="label">Total produits</div><div class="value" id="statTotal">0</div><div class="sub">Tous niches confondus</div></div>
+        <div class="stat-card"><div class="label">Actifs</div><div class="value" id="statActive" style="color:#059669">0</div><div class="sub">Visibles en boutique</div></div>
+        <div class="stat-card"><div class="label">Prix moyen</div><div class="value" id="statPrice">0 DA</div><div class="sub">Moyenne catalogue</div></div>
+      </div>
+
+      <div class="toolbar">
+        <input type="text" id="searchProducts" placeholder="🔍 Rechercher nom, description..." oninput="renderProducts()">
+        <select id="filterNiche" onchange="renderProducts()"><option value="all">Toutes les niches</option></select>
+        <select id="filterStatus" onchange="renderProducts()">
+          <option value="all">Tous statuts</option>
+          <option value="active">Actifs seulement</option>
+          <option value="inactive">Inactifs</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('searchProducts').value='';document.getElementById('filterNiche').value='all';renderProducts()">↺ Réinitialiser</button>
+      </div>
+
+      <div class="products-grid" id="productsGrid"></div>
+      <div class="empty-state" id="emptyProducts" style="display:none">
+        <div class="icon">📦</div>
+        <h3>Aucun produit</h3>
+        <p>Ajoutez votre premier produit pour qu'il apparaisse dans la boutique.</p><br>
+        <button class="btn btn-primary" onclick="openProductModal()">+ Ajouter un produit</button>
+      </div>
+    </div>
+
+    <!-- PAGE NICHES -->
+    <div class="page" id="page-niches">
+      <div class="page-head">
+        <div>
+          <h2>Gestion des niches</h2>
+          <p>Organisez vos produits par catégorie. Le menu de la boutique se met à jour automatiquement.</p>
+        </div>
+      </div>
+
+      <div class="add-niche-form">
+        <div style="flex:1">
+          <label style="font-size:13px;font-weight:600;color:#334155">Nouvelle niche</label>
+          <input type="text" id="newNicheName" placeholder="Ex: Cuisine, Beauté, Jouets..." onkeydown="if(event.key==='Enter') addNiche()">
+        </div>
+        <button class="btn btn-primary" onclick="addNiche()" style="height:42px">+ Ajouter</button>
+      </div>
+      <p style="font-size:12px;color:#64748b;margin-bottom:14px">💡 La niche <b>Tous les produits</b> est obligatoire et ne peut pas être supprimée. Les autres peuvent être renommées ou supprimées (si aucun produit ne les utilise).</p>
+      <div class="niches-grid" id="nichesGrid"></div>
+    </div>
+
+    <!-- PAGE SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-head"><div><h2>Paramètres</h2><p>Mot de passe, données et boutique</p></div></div>
+      <div style="display:grid;gap:16px">
+        <div style="background:#fff;padding:20px;border-radius:12px;border:1px solid #f1f5f9">
+          <h3 style="margin-bottom:10px">🔐 Changer le mot de passe admin</h3>
+          <p style="font-size:13px;color:#64748b;margin-bottom:12px">Le mot de passe est défini dans le fichier <code>admin.html</code> ligne <code>const ADMIN_PASS</code>. Pour le changer durablement, éditez ce fichier. Ici vous pouvez le changer pour cette session (stocké en localStorage).</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <input type="password" id="newPass" placeholder="Nouveau mot de passe" style="flex:1;min-width:200px;padding:10px 14px;border:1px solid #e2e8f0;border-radius:8px">
+            <button class="btn btn-primary" onclick="changePass()">Enregistrer</button>
+          </div>
+        </div>
+        <div style="background:#fff;padding:20px;border-radius:12px;border:1px solid #f1f5f9">
+          <h3 style="margin-bottom:10px">💾 Données</h3>
+          <p style="font-size:13px;color:#64748b;margin-bottom:12px">Les produits et niches sont stockés dans votre navigateur (localStorage). Utilisez Export pour sauvegarder un fichier JSON.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary" onclick="exportData()">⬇ Exporter JSON</button>
+            <label class="btn btn-ghost" style="cursor:pointer">⬆ Importer JSON <input type="file" accept=".json" style="display:none" onchange="importData(event)"></label>
+            <button class="btn btn-danger" onclick="resetData()">🗑 Réinitialiser données</button>
+          </div>
+        </div>
+        <div style="background:#fff;padding:20px;border-radius:12px;border:1px solid #f1f5f9">
+          <h3 style="margin-bottom:10px">🏪 Boutique</h3>
+          <a href="../index.html" target="_blank" class="btn btn-orange">👁 Ouvrir la boutique →</a>
+          <p style="font-size:12px;color:#64748b;margin-top:10px">Les modifications dans l'admin apparaissent instantanément dans la boutique (même navigateur). Sur un autre appareil, importez le JSON exporté.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODALE PRODUIT -->
+<div class="modal-overlay" id="productModalOverlay" onclick="if(event.target===this) closeProductModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">Nouveau produit</h3>
+      <button class="modal-close" onclick="closeProductModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nom du produit <span>*</span></label>
+          <input type="text" id="pName" placeholder="Ex: Mepal Lunch Box">
+        </div>
+        <div class="form-group">
+          <label>Prix (DA) <span>*</span></label>
+          <input type="number" id="pPrice" placeholder="3000" min="0">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Niche / Catégorie <span>*</span></label>
+          <select id="pNiche"></select>
+        </div>
+        <div class="form-group">
+          <label>Statut</label>
+          <select id="pActive">
+            <option value="true">✅ Actif (visible en boutique)</option>
+            <option value="false">⏸ Inactif (caché)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description <span>*</span></label>
+        <textarea id="pDesc" placeholder="Décrivez le produit, ses avantages, matériaux..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Photos (glissez ou cliquez, la 1ère = couverture) <span>*</span></label>
+        <div class="image-uploader" id="imageUploader" onclick="document.getElementById('pImages').click()">
+          <div style="font-size:28px">📸</div>
+          <div style="font-weight:700;margin-top:6px">Ajouter des photos</div>
+          <div style="font-size:12px;color:#64748b">JPG, PNG — max 4 photos — cliquez ou déposez</div>
+          <input type="file" id="pImages" accept="image/*" multiple onchange="handleImageFiles(this.files)">
+        </div>
+        <div class="image-preview" id="imagePreview"></div>
+        <div style="font-size:11px;color:#64748b;margin-top:6px">Astuce : survolez une photo → “Définir couverture” pour la mettre en 1ère. Glissez pour info.</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeProductModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveProduct()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ADMIN_PASS_DEFAULT = "admin123";
+let ADMIN_PASS = localStorage.getItem('oso_admin_pass') || ADMIN_PASS_DEFAULT;
+const LS_NICHES = 'oso_niches_v2';
+const LS_PRODUCTS = 'oso_products_v2';
+
+// ⭐ NOUVEAU : Config Google Apps Script (upload images)
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwzo7s6-Iouc4USz0N_ppKX2y3oo_9U0LotAgI9j2jUT6CUrzPpTCM5WITwSk1c13ym/exec';
+const API_KEY = 'oso_secret_2025';
+
+// --- DEFAULTS ---
+const DEFAULT_NICHES = [
+  {slug:'all', name:'Tous les produits', deletable:false},
+  {slug:'lunchbox', name:'Lunch Box', deletable:true},
+  {slug:'cuisine', name:'Cuisine', deletable:true},
+  {slug:'maison', name:'Maison', deletable:true},
+  {slug:'stockage', name:'Stockage', deletable:true},
+  {slug:'accessoires', name:'Accessoires', deletable:true},
+  {slug:'promos', name:'Promos', deletable:true},
+  {slug:'nouveautes', name:'Nouveautés', deletable:true},
+];
+const DEFAULT_PRODUCT = {
+  id:'prod_default_1',
+  name:'Mepal Lunch BOX',
+  price:3000,
+  niche:'lunchbox',
+  description:"Cet ensemble complet de lunch box est conçu pour vous accompagner partout au quotidien. Alliant design moderne et fonctionnalité, il vous permet d'emporter vos repas de manière pratique, sûre et écologique.",
+  images:["DATA HOMME/PRODOIT 01/02.png","DATA HOMME/PRODOIT 01/03.png","DATA HOMME/PRODOIT 01/04.png","DATA HOMME/PRODOIT 01/05.png"],
+  active:true,
+  createdAt: Date.now()
+};
+
+let niches = loadNiches();
+let products = loadProducts();
+let editingId = null;
+let tempImages = []; // array of dataURL or path
+
+function loadNiches(){
+  try{
+    const s = localStorage.getItem(LS_NICHES);
+    if(s){ const p=JSON.parse(s); if(Array.isArray(p) && p.length) return p; }
+  }catch(e){}
+  localStorage.setItem(LS_NICHES, JSON.stringify(DEFAULT_NICHES));
+  return [...DEFAULT_NICHES];
+}
+function loadProducts(){
+  try{
+    const s = localStorage.getItem(LS_PRODUCTS);
+    if(s){ const p=JSON.parse(s); if(Array.isArray(p) && p.length) return p; }
+  }catch(e){}
+  localStorage.setItem(LS_PRODUCTS, JSON.stringify([DEFAULT_PRODUCT]));
+  return [DEFAULT_PRODUCT];
+}
+function saveNiches(){ localStorage.setItem(LS_NICHES, JSON.stringify(niches)); }
+function saveProducts(){ localStorage.setItem(LS_PRODUCTS, JSON.stringify(products)); }
+
+function doLogin(){
+  const v = document.getElementById('loginPass').value;
+  if(v===ADMIN_PASS){
+    localStorage.setItem('oso_admin_logged','1');
+    document.getElementById('loginOverlay').style.display='none';
+    initAdmin();
+  } else {
+    document.getElementById('loginError').style.display='block';
+    setTimeout(()=>document.getElementById('loginError').style.display='none',2500);
+  }
+}
+function logout(){ localStorage.removeItem('oso_admin_logged'); location.reload(); }
+function checkLogin(){
+  if(localStorage.getItem('oso_admin_logged')==='1'){
+    document.getElementById('loginOverlay').style.display='none';
+    initAdmin();
+  }
+}
+function initAdmin(){
+  renderNiches();
+  renderProducts();
+  populateNicheSelects();
+  updateStats();
+}
+
+// Sidebar
+function showPage(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.sidebar-link').forEach(b=>b.classList.toggle('active', b.dataset.page===p));
+  if(window.innerWidth<=860) toggleSidebar();
+}
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+
+// Niches
+function slugify(s){
+  return s.toLowerCase().trim().replace(/\s+/g,'-').replace(/[^a-z0-9\-_àâéèêëîïôùûüÿç]/g,'').replace(/-+/g,'-').replace(/^-|-$/g,'') || 'niche-'+Date.now();
+}
+function addNiche(){
+  const inp = document.getElementById('newNicheName');
+  const name = inp.value.trim();
+  if(name.length<2){ toast('Nom trop court (min 2)','error'); return; }
+  let slug = slugify(name);
+  if(slug==='all'){ slug='all-'+Date.now(); }
+  if(niches.some(n=>n.slug===slug)){ toast('Cette niche existe déjà','error'); return; }
+  niches.push({slug, name, deletable:true});
+  saveNiches();
+  inp.value='';
+  renderNiches();
+  populateNicheSelects();
+  toast('Niche ajoutée ✓','success');
+}
+function renderNiches(){
+  const grid = document.getElementById('nichesGrid');
+  document.getElementById('badgeNiches').textContent = niches.length;
+  grid.innerHTML='';
+  niches.forEach(n=>{
+    const count = n.slug==='all' ? products.length : products.filter(p=>p.niche===n.slug).length;
+    const card = document.createElement('div');
+    card.className='niche-card'+(n.slug==='all'?' all':'');
+    card.innerHTML=`
+      <div class="niche-top">
+        <div class="niche-icon">${n.slug==='all'?'⭐':'🏷️'}</div>
+        <div style="flex:1;min-width:0">
+          <div class="niche-name" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="editable-name" data-slug="${n.slug}">${n.name}</span> <span class="niche-slug">${n.slug}</span></div>
+          <div class="niche-count">${count} produit(s)</div>
+        </div>
+      </div>
+      <div class="niche-actions">
+        ${n.deletable!==false ? `<button class="btn btn-ghost btn-sm" onclick="renameNiche('${n.slug}')">✏️ Renommer</button><button class="btn btn-danger btn-sm" onclick="deleteNiche('${n.slug}')">🗑 Supprimer</button>` : `<span style="font-size:11px;color:#64748b">Prédéfinie — non supprimable</span>`}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+function renameNiche(slug){
+  const n = niches.find(x=>x.slug===slug);
+  const nv = prompt('Nouveau nom pour la niche:', n.name);
+  if(nv && nv.trim().length>=2){ n.name = nv.trim(); saveNiches(); renderNiches(); populateNicheSelects(); renderProducts(); toast('Niche renommée ✓','success'); }
+}
+function deleteNiche(slug){
+  const n = niches.find(x=>x.slug===slug);
+  if(!n || n.deletable===false) return;
+  const used = products.filter(p=>p.niche===slug).length;
+  if(used>0){ toast(`Impossible : ${used} produit(s) utilisent cette niche. Changez leur niche d'abord.`,'error'); return; }
+  if(!confirm(`Supprimer la niche "${n.name}" ?`)) return;
+  niches = niches.filter(x=>x.slug!==slug);
+  saveNiches();
+  renderNiches();
+  populateNicheSelects();
+  renderProducts();
+  toast('Niche supprimée ✓','success');
+}
+function populateNicheSelects(){
+  const selForm = document.getElementById('pNiche');
+  const selFilter = document.getElementById('filterNiche');
+  const currentForm = selForm.value;
+  const currentFilter = selFilter.value;
+  selForm.innerHTML='';
+  selFilter.innerHTML='<option value="all">Toutes les niches</option>';
+  niches.filter(n=>n.slug!=='all').forEach(n=>{
+    const o1=document.createElement('option'); o1.value=n.slug; o1.textContent=n.name; selForm.appendChild(o1);
+    const o2=document.createElement('option'); o2.value=n.slug; o2.textContent=n.name; selFilter.appendChild(o2);
+  });
+  if(currentForm) selForm.value=currentForm;
+  if(currentFilter) selFilter.value=currentFilter;
+}
+
+// Products
+function updateStats(){
+  document.getElementById('badgeProducts').textContent=products.length;
+  document.getElementById('statTotal').textContent=products.length;
+  document.getElementById('statActive').textContent=products.filter(p=>p.active).length;
+  const avg = products.length? Math.round(products.reduce((a,b)=>a+b.price,0)/products.length):0;
+  document.getElementById('statPrice').textContent=avg.toLocaleString('fr-DZ')+' DA';
+}
+function renderProducts(){
+  const grid = document.getElementById('productsGrid');
+  const empty = document.getElementById('emptyProducts');
+  const q = document.getElementById('searchProducts').value.toLowerCase().trim();
+  const fNiche = document.getElementById('filterNiche').value;
+  const fStatus = document.getElementById('filterStatus').value;
+
+  let list = [...products];
+  if(q) list = list.filter(p=> (p.name+' '+p.description+' '+p.niche).toLowerCase().includes(q));
+  if(fNiche!=='all') list = list.filter(p=>p.niche===fNiche);
+  if(fStatus==='active') list = list.filter(p=>p.active);
+  if(fStatus==='inactive') list = list.filter(p=>!p.active);
+
+  grid.innerHTML='';
+  if(list.length===0){ grid.style.display='none'; empty.style.display='block'; }
+  else{
+    grid.style.display='grid'; empty.style.display='none';
+    list.sort((a,b)=>b.createdAt-a.createdAt).forEach(p=>{
+      const nicheName = niches.find(n=>n.slug===p.niche)?.name || p.niche;
+      const card=document.createElement('div');
+      card.className='product-admin-card';
+      card.innerHTML=`
+        <div class="prod-img">
+          <img src="${typeof p.images?.[0] === 'string' ? p.images[0] : (p.images?.[0]?.url || '')}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22120%22><rect fill=%22%23f1f5f9%22 width=%22200%22 height=%22120%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%2394a3b8%22>Pas d&apos;image</text></svg>'">
+          <span class="prod-badge ${p.active?'':'inactive'}">${p.active?'● Actif':'○ Inactif'}</span>
+          <span class="prod-price-badge">${Number(p.price).toLocaleString('fr-DZ')} DA</span>
+        </div>
+        <div class="prod-body">
+          <div class="prod-title" title="${p.name}">${p.name}</div>
+          <div class="prod-desc">${p.description||''}</div>
+          <div class="prod-meta">
+            <span class="meta-tag">🏷️ ${nicheName}</span>
+            <span class="meta-tag">🖼 ${p.images.length} photo(s)</span>
+          </div>
+          <div class="prod-actions">
+            <button class="btn btn-primary btn-sm" onclick="editProduct('${p.id}')">✏️ Modifier</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">🗑</button>
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+  updateStats();
+}
+function openProductModal(id=null){
+  editingId = id;
+  const modal = document.getElementById('productModalOverlay');
+  const title = document.getElementById('modalTitle');
+  if(id){
+    const p = products.find(x=>x.id===id);
+    if(!p) return;
+    title.textContent='Modifier produit';
+    document.getElementById('pName').value=p.name;
+    document.getElementById('pPrice').value=p.price;
+    document.getElementById('pNiche').value=p.niche;
+    document.getElementById('pActive').value= String(p.active);
+    document.getElementById('pDesc').value=p.description;
+    tempImages = (p.images || []).map(img => {
+  if (typeof img === 'string') return { url: img, fileId: null };
+  return img;
+});
+  } else {
+    title.textContent='Nouveau produit';
+    document.getElementById('pName').value='';
+    document.getElementById('pPrice').value='';
+    document.getElementById('pNiche').selectedIndex=0;
+    document.getElementById('pActive').value='true';
+    document.getElementById('pDesc').value='';
+    tempImages=[];
+  }
+  renderTempImages();
+  modal.classList.add('open');
+}
+function closeProductModal(){
+  document.getElementById('productModalOverlay').classList.remove('open');
+  editingId=null;
+  tempImages=[];
+}
+
+// ============================================================
+// UPLOAD D'IMAGES VERS GOOGLE DRIVE
+// ============================================================
+async function handleImageFiles(files) {
+  const arr = Array.from(files);
+  if (tempImages.length + arr.length > 4) {
+    toast('Max 4 photos par produit', 'error');
+    return;
+  }
+
+  // Affiche un loader pendant l'upload
+  const uploader = document.getElementById('imageUploader');
+  const originalHTML = uploader.innerHTML;
+  uploader.style.pointerEvents = 'none';
+  uploader.style.opacity = '0.6';
+  uploader.innerHTML = '<div style="font-size:28px">⏳</div><div style="font-weight:700;margin-top:6px">Upload en cours…</div>';
+
+  try {
+    for (const file of arr) {
+      // 1. Compresser l'image localement (avant l'envoi)
+      const dataUrl = await compressImage(file, 1000, 0.85);
+
+      // 2. Envoyer à Google Apps Script → Drive
+      const result = await uploadImageToDrive(dataUrl, file.name);
+
+      if (result.success) {
+        // On stocke { url, fileId } pour pouvoir supprimer plus tard
+        tempImages.push({ url: result.url, fileId: result.fileId });
+      } else {
+        toast('Erreur upload : ' + (result.error || 'inconnue'), 'error');
+      }
+    }
+    renderTempImages();
+    toast(tempImages.length + ' photo(s) uploadée(s) ✓', 'success');
+  } catch (err) {
+    toast('Erreur upload : ' + err.message, 'error');
+  } finally {
+    uploader.style.pointerEvents = '';
+    uploader.style.opacity = '';
+    uploader.innerHTML = originalHTML;
+    document.getElementById('pImages').value = '';
+  }
+}
+
+// Compresse une image localement (canvas) avant l'envoi
+function compressImage(file, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/webp', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Envoie l'image à Google Apps Script (qui la met sur Drive)
+async function uploadImageToDrive(base64DataUrl, fileName) {
+  const payload = {
+    apiKey: API_KEY,
+    action: 'uploadImage',
+    fileName: fileName,
+    imageBase64: base64DataUrl
+  };
+
+  const res = await fetch(GOOGLE_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // évite le preflight CORS
+    body: JSON.stringify(payload)
+  });
+
+  return await res.json();
+}
+
+// Supprime une image de Google Drive (quand on la retire)
+async function deleteImageFromDrive(fileId) {
+  if (!fileId) return;
+  try {
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ apiKey: API_KEY, action: 'deleteImage', fileId })
+    });
+  } catch (e) {
+    console.warn('Suppression Drive échouée:', e);
+  }
+}
+
+// Affichage des miniatures (compatible {url, fileId} ET anciennes strings)
+function renderTempImages() {
+  const prev = document.getElementById('imagePreview');
+  prev.innerHTML = '';
+  tempImages.forEach((item, idx) => {
+    const src = typeof item === 'string' ? item : item.url;
+    const d = document.createElement('div');
+    d.className = 'img-thumb';
+    d.innerHTML = `
+      <img src="${src}" alt="">
+      <button class="remove" onclick="removeTempImage(${idx})" title="Supprimer">×</button>
+      ${idx === 0
+        ? '<div class="cover-badge">★ Couverture</div>'
+        : `<button class="set-cover" onclick="setCover(${idx})">Définir couverture</button>`}
+    `;
+    prev.appendChild(d);
+  });
+}
+
+// Suppression : supprime aussi sur Google Drive
+function removeTempImage(i) {
+  const item = tempImages[i];
+  // Si c'est une image uploadée sur Drive (objet avec fileId), on la supprime
+  if (item && typeof item === 'object' && item.fileId) {
+    deleteImageFromDrive(item.fileId);
+  }
+  tempImages.splice(i, 1);
+  renderTempImages();
+}
+
+// Couverture : on inverse juste l'ordre
+function setCover(i) {
+  const v = tempImages.splice(i, 1)[0];
+  tempImages.unshift(v);
+  renderTempImages();
+}
+function saveProduct(){
+  const name=document.getElementById('pName').value.trim();
+  const price=parseInt(document.getElementById('pPrice').value,10);
+  const niche=document.getElementById('pNiche').value;
+  const active=document.getElementById('pActive').value==='true';
+  const desc=document.getElementById('pDesc').value.trim();
+
+  if(name.length<2){ toast('Nom trop court','error'); return; }
+  if(!price || price<=0){ toast('Prix invalide','error'); return; }
+  if(!niche){ toast('Choisissez une niche','error'); return; }
+  if(desc.length<5){ toast('Description trop courte','error'); return; }
+  if(tempImages.length===0){ toast('Ajoutez au moins 1 photo','error'); return; }
+
+  if(editingId){
+    const idx=products.findIndex(p=>p.id===editingId);
+    if(idx>-1){
+      const old=products[idx];
+      products[idx]={...old, name, price, niche, active, description:desc, images: tempImages.map(item => typeof item === 'string' ? item : item.url)};
+      try {
+        saveProducts();
+      } catch(e){
+        products[idx]=old;
+        toast('⚠️ Stockage plein : enregistrement impossible (réduisez la taille des photos)','error');
+        return;
+      }
+      toast('Produit modifié ✓','success');
+    }
+  } else {
+    const newProd={id:'prod_'+Date.now(), name, price, niche, active, description:desc, images: tempImages.map(item => typeof item === 'string' ? item : item.url)};
+    products.push(newProd);
+    try {
+      saveProducts();
+    } catch(e){
+      products.pop();
+      toast('⚠️ Stockage plein : enregistrement impossible (réduisez la taille des photos)','error');
+      return;
+    }
+    toast('Produit ajouté ✓','success');
+  }
+  closeProductModal();
+  renderProducts();
+  renderNiches();
+}
+
+// Drag & drop
+const uploader = document.getElementById('imageUploader');
+if(uploader){
+  ['dragenter','dragover'].forEach(ev=>uploader.addEventListener(ev,e=>{e.preventDefault(); uploader.style.borderColor='#2a5298';}));
+  ['dragleave','drop'].forEach(ev=>uploader.addEventListener(ev,e=>{e.preventDefault(); uploader.style.borderColor='#cbd5e1';}));
+  uploader.addEventListener('drop',e=>{
+    const files = e.dataTransfer.files;
+    if(files.length) handleImageFiles(files);
+  });
+}
+
+function editProduct(id){ openProductModal(id); }
+function deleteProduct(id){
+  const p=products.find(x=>x.id===id);
+  if(!confirm(`Supprimer "${p.name}" ?`)) return;
+  products=products.filter(x=>x.id!==id);
+  saveProducts();
+  renderProducts();
+  renderNiches();
+  toast('Produit supprimé ✓','success');
+}
+
+// Import / Export
+function exportData(){
+  const data={niches, products, exportedAt:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='oso-store-data-'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+  URL.revokeObjectURL(url);
+  toast('Export téléchargé ✓','success');
+}
+function importData(event){
+  const file=event.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(data.niches && Array.isArray(data.niches) && data.products && Array.isArray(data.products)){
+        if(!confirm(`Importer ${data.products.length} produits et ${data.niches.length} niches ? Cela remplacera les données actuelles.`)) return;
+        niches=data.niches;
+        products=data.products;
+        saveNiches(); saveProducts();
+        renderNiches(); renderProducts(); populateNicheSelects();
+        toast('Import réussi ✓','success');
+      } else { toast('Fichier invalide','error'); }
+    }catch(err){ toast('Fichier JSON invalide','error'); }
+    event.target.value='';
+  };
+  reader.readAsText(file);
+}
+function resetData(){
+  if(!confirm('Réinitialiser toutes les données aux valeurs par défaut ?')) return;
+  if(!confirm('Confirmer la réinitialisation ? Cette action est irréversible.')) return;
+  localStorage.setItem(LS_NICHES, JSON.stringify(DEFAULT_NICHES));
+  localStorage.setItem(LS_PRODUCTS, JSON.stringify([DEFAULT_PRODUCT]));
+  niches=[...DEFAULT_NICHES];
+  products=[DEFAULT_PRODUCT];
+  renderNiches(); renderProducts(); populateNicheSelects();
+  toast('Données réinitialisées ✓','success');
+}
+function changePass(){
+  const v=document.getElementById('newPass').value.trim();
+  if(v.length<4){ toast('Min 4 caractères','error'); return; }
+  localStorage.setItem('oso_admin_pass', v);
+  ADMIN_PASS=v;
+  document.getElementById('newPass').value='';
+  toast('Mot de passe changé ✓','success');
+}
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast show '+(type||'');
+  setTimeout(()=>t.className='toast',3000);
+}
+
+checkLogin();
+</script>
+</body>
+</html>
